@@ -1,0 +1,144 @@
+<div class="app app-default">
+  <div class="app-container">
+
+    <i *ngIf="isLoading()" class="center fa fa-5x fa-spin fa-spinner"></i>
+
+    <div class="row">
+      <div class="col-xs-12">
+        <div style="margin-bottom: 0px; margin-top: 50px;" class="pull-left">
+          <img src="assets/rogfk_liggende_farger.jpg" class="img-responsive" height="75" width="261" />
+        </div>
+      </div>
+    </div>
+    <div style="padding-right: 0px" class="col-xs-12">
+      <div class="pull-right">
+        <button type="submit" class="btn btn-xs btn-default" (click)="refresh()"><span class="fa fa-refresh" aria-hidden="true"></span></button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-4">
+        <a class="card card-banner card-green-light" [routerLink]="['/']" [queryParams]="{type: 'confirmed'}">
+          <div class="card-body">
+            <i class="icon fa fa-user fa-4x"></i>
+            <div class="content">
+              <div class="title">Mine konsulenter</div>
+              <div class="value"><span class="sign"></span>{{(consultants.CONFIRMED && consultants.CONFIRMED.length) || 0}}</div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xs-4">
+        <a class="card card-banner card-yellow-light" [routerLink]="['/']" [queryParams]="{type: 'pending'}">
+          <div class="card-body">
+            <i class="icon fa fa-user fa-4x"></i>
+            <div class="content">
+              <div class="title">Besvarte invitasjoner</div>
+              <div class="value"><span class="sign"></span>{{(consultants.PENDING && consultants.PENDING.length) || 0}}</div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-xs-4">
+        <a class="card card-banner card-blue-light" [routerLink]="['/']" [queryParams]="{type: 'invited'}">
+          <div class="card-body">
+            <i class="icon fa fa-user fa-4x"></i>
+            <div class="content">
+              <div class="title">Invitasjoner</div>
+              <div class="value"><span class="sign"></span>{{(consultants.INVITED && consultants.INVITED.length) || 0}}</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="alert" [ngClass]="messageType" *ngIf="isMessageVisible" role="alert">
+          {{message}}
+        </div>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Inviter konsulent</h4>
+              </div>
+              <div class="modal-body">
+                <input type="tel" class="form-control" [(ngModel)]="consultantNumber" placeholder="Skriv inn konsulentens mobilnummer">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-default" data-dismiss="modal">Avbryt</button>
+                <button type="button" class="btn btn-sm btn-success" data-dismiss="modal" (click)="inviteConsultant(consultantNumber)">Inviter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="background-color: #f0f4f5; color: #999; font-size: 1.0em; font-weight: 400; text-transform: uppercase; margin: 0px;padding: 0.6em;">
+      <div class="col-md-2">Fornavn</div>
+      <div class="col-md-2">Etternavn</div>
+      <div class="col-md-2">Organisasjon</div>
+      <div class="col-md-1">Mobil</div>
+      <div class="col-md-2">Status</div>
+      <div class="col-md-1">Utløpsdato</div>
+      <div class="col-md-1">&nbsp;</div>
+      <div class="col-md-1">&nbsp;</div>
+    </div>
+    <div *ngFor="let item of visibleConsultants; let i = index" (click)="rowSelected(i, i, $event)"  [ngClass]="{'odd' : i % 2 != 0}" class="usertable" >
+      <div class="row">
+        <div class="col-md-2">{{item.firstName}}</div>
+        <div class="col-md-2">
+          <span *ngIf="item.state !== 'INVITED'">{{item.lastName}}</span>
+        </div>
+        <div class="col-md-2">{{item.organization}}</div>
+        <div class="col-md-1">{{item.mobile}}</div>
+        <div class="col-md-2">
+          <span *ngIf="item.state === 'CONFIRMED'" class="badge badge-success badge-icon">
+                      <i class="fa fa-check" aria-hidden="true"></i><span>{{item.state}}</span>
+          </span>
+          <span *ngIf="item.state === 'INVITED'" class="badge badge-info badge-icon">
+                      <i class="fa fa-clock-o" aria-hidden="true"></i><span>{{item.state}}</span>
+          </span>
+          <span *ngIf="item.state === 'PENDING'" class="badge badge-warning badge-icon">
+                      <i class="fa fa-clock-o" aria-hidden="true"></i><span>{{item.state}}</span>
+          </span>
+        </div>
+        <div class="col-md-1">{{item.expireDate | date: 'dd.MM.yyyy'}}</div>
+        <div class="col-md-1">
+          <button *ngIf="item.state === 'PENDING'" type="submit" [disabled]="!item.expireDate" class="btn btn-success btn-xs" (click)="confirm(item, $event)"><span class="fa fa-thumbs-up" aria-hidden="true"></span></button>
+          <button type="submit" class="btn btn-danger btn-xs" (click)="delete(item, $event)"><span class="fa fa-remove" aria-hidden="true"></span></button>
+        </div>
+        <div class="col-md-1" (click)="rowSelected(null, i, $event)">
+          <span class="fa fa-2x pull-right"  [ngClass]="{'fa-chevron-right': i !== selectedRow && item.state !== 'INVITED', 'fa-chevron-up': i === selectedRow && item.state !== 'INVITED'}" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="row" *ngIf="i === selectedRow && item.state !== 'INVITED'">
+        <div class="col-md-4">
+            <div class="form-group">
+              <label>Utløpsdato</label>
+              <my-date-picker locale="no" [options]="myDatePickerOptions" [(ngModel)]="expireDate"></my-date-picker>
+            </div>
+        </div>
+        <div class="col-md-4">
+          <button type="button"  style="margin-top: 1.7em;" class="btn btn-primary" (click)="saveExpireDate(i)">Lagre</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-floating-top" id="help-actions">
+      <button type="button" class="btn btn-default btn-toggle" data-toggle="modal" data-target="#myModal">
+    <i class="icon fa fa-plus"></i>
+    <span class="help-text">Shortcut</span>
+  </button>
+      <div class="btn-bg"></div>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+</div>
